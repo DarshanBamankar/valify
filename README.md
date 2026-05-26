@@ -1,3 +1,6 @@
+[![PyPI version](https://badge.fury.io/py/valify.svg)](https://pypi.org/project/valify/)
+[![Python](https://img.shields.io/pypi/pyversions/valify.svg)](https://pypi.org/project/valify/)
+
 # valify
 
 A composable, expressive data validation library for Python.
