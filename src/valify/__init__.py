@@ -16,6 +16,8 @@ Basic usage::
     result = schema.validate({"name": "Alice", "age": 30})
 """
 
+from __future__ import annotations
+
 from .exceptions import (
     ValifyError, 
     ValidationError, 

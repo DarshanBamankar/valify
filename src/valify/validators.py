@@ -1,5 +1,3 @@
-import re
-from .exceptions import ValidationError
 
 """
 valify.validators
@@ -12,10 +10,18 @@ and exposes a single `validate(value)` method that either returns the
 (possibly coerced) value or raises ValidationError.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
+import re
+
+from .exceptions import ValidationError
+
 
 class Validator:
-    """ Base class for all valify validators. 
-    
+    """Base class for all valify validators.
+
     All built-in and custom validators inherit from this class.
     Subclasses must implement the `validate` method.
 
@@ -24,7 +30,7 @@ class Validator:
     Creating a custom validator::
 
         class PositiveInt(Validator):
-            def validate(self, value):
+            def validate(self, value: object) -> object:
                 if not isinstance(value, int) or value <= 0:
                     raise ValidationError(
                         "Value must be a positive integer.",
@@ -33,30 +39,33 @@ class Validator:
                 return value
     """
     
-    def validate(self, value):
-        """ Validates a value and returns it, possibly coerced
-        
+    def validate(self, value: Any) -> Any:
+        """
         Parameters
         ----------
-        value : object
-            The Validated (and possibly coerced) value.
-        
+        value : Any
+            The value to validate.
+
+        Returns
+        -------
+        Any
+            The validated (and possibly coerced) value.
+
         Raises
         ------
         ValidationError
             If the value fails validation.
-            
         """
         raise NotImplementedError(
             f"{type(self).__name__} must implement validate()"
         )
         
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}()"
     
 class StringValidator(Validator):
-    """ Validates that a value is a string, with optional lenght constraints. 
-    
+    """Validates that a value is a string, with optional length constraints.
+
     Parameters
     ----------
     min_length : int or None
@@ -72,15 +81,21 @@ class StringValidator(Validator):
         v = StringValidator(min_length=2, max_length=50)
         v.validate("Alice")   # returns "Alice"
         v.validate("A")       # raises ValidationError
-    
     """
-    def __init__(self, *, min_length=None, max_length=None, strip=True):
+    
+    def __init__(
+        self,
+        *, 
+        min_length: int | None = None,
+        max_length: int | None = None,
+        strip: bool = True
+        ) -> None:
         
-        self.min_length = min_length
-        self.max_length = max_length
-        self.strip = strip
+        self.min_length: int | None = min_length
+        self.max_length: int | None = max_length
+        self.strip: bool = strip
         
-    def validate(self, value):
+    def validate(self, value: Any) -> str:
         if not isinstance(value, str):
                 raise ValidationError(
                     f"Expected a string, got {type(value).__name__}",
@@ -103,7 +118,7 @@ class StringValidator(Validator):
         
         return value
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"StringValidator("
             f"min_length={self.min_length!r}, "
@@ -131,12 +146,19 @@ class IntValidator(Validator):
         v.validate(-1)    # raises ValidationError
     """
     
-    def __init__(self, *, min_value=None, max_value=None, coerce=False):
-        self.min_value=min_value
-        self.max_value=max_value
-        self.coerce=coerce
+    def __init__(
+        self, 
+        *,
+        min_value: int | None = None,
+        max_value: int | None = None,
+        coerce: bool = False
+        ) -> None:
+        
+        self.min_value: int | None = min_value
+        self.max_value: int | None = max_value
+        self.coerce: bool = coerce
     
-    def validate(self, value):
+    def validate(self, value: Any) -> int:
         if self.coerce and not isinstance(value,int):
             try:
                 value = int(value)
@@ -163,7 +185,7 @@ class IntValidator(Validator):
             )
         return value
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"IntValidator("
             f"min_value={self.min_value!r}, "
@@ -191,15 +213,21 @@ class FloatValidator(Validator):
         v.validate(1.5)   # raises ValidationError
     """
     
-    def __init__(self, *, min_value=None, max_value=None, coerce=False):
-        self.min_value=min_value
-        self.max_value=max_value
-        self.coerce=coerce
+    def __init__(
+        self,
+        *,
+        min_value: float | None = None,
+        max_value: float | None = None,
+        coerce: bool = False
+        ) -> None:
+        self.min_value: float | None = min_value
+        self.max_value: float | None = max_value
+        self.coerce: bool = coerce
         
-    def validate(self,value):
+    def validate(self,value: Any) -> float:
         if self.coerce and not isinstance(value,float):
             try:
-                value=float(value)
+                value = float(value)
             except(ValueError, TypeError):
                 raise ValidationError(
                     f"Could not convert {value!r} to float",
@@ -228,7 +256,7 @@ class FloatValidator(Validator):
         
         return value
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"FloatValidator("
             f"min_value={self.min_value!r}, "
@@ -254,15 +282,15 @@ class BoolValidator(Validator):
     """
     
     # Accepted string values while coercing - 
-    _TRUTH_VALUES = {"true","1","yes"}
-    _FALSE_VALUES = {"false","0","no"}
+    _TRUTH_VALUES: set[str] = {"true","1","yes"}
+    _FALSE_VALUES: set[str] = {"false","0","no"}
     
-    def __init__(self,*,coerce=False):
-        self.coerce= coerce
+    def __init__(self,*,coerce: bool = False) -> None:
+        self.coerce: bool = coerce
 
-    def validate(self, value):
+    def validate(self, value: Any)-> bool:
         if self.coerce and isinstance(value,str):
-            lowered = value.lower()
+            lowered: str = value.lower()
             if lowered in self._TRUTH_VALUES:
                 return True
             if lowered in self._FALSE_VALUES:
@@ -280,7 +308,7 @@ class BoolValidator(Validator):
             
         return value
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"BoolValidator(coerce={self.coerce!r})"
 
 class EmailValidator(Validator):
@@ -298,11 +326,11 @@ class EmailValidator(Validator):
     """
     
     # Email regex - 
-    _EMAIL_REGEX = re.compile(
+    _EMAIL_REGEX: re.Pattern[str] = re.compile(
         r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     )
     
-    def validate(self,value):
+    def validate(self,value: Any) -> str:
         if not isinstance(value,str):
             raise ValidationError(
                 f"Expected a string, got {type(value).__name__}",
@@ -318,7 +346,7 @@ class EmailValidator(Validator):
         
         return value
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "EmailValidator()"
     
     

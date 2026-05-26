@@ -10,6 +10,10 @@ errors are collected before raising — so you get all errors at once, not
 just the first one.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 from .exceptions import ValidationError, RequiredFieldError, SchemaError
 from .validators import Validator
 
@@ -35,7 +39,11 @@ class Schema:
         print(result)  # {"name": "Alice", "age": 30}
     """
     
-    def __init__(self, fields, * , strict=False):
+    def __init__(self,
+                fields: dict[str, Validator],
+                * ,
+                strict: bool = False
+                ) -> None:
         
         # Validate the schema definition itself before storing it.
         # This catches developer mistakes early, at schema creation time,
@@ -55,10 +63,10 @@ class Schema:
                     f"got {type(val).__name__!r}."
                 )
         
-        self.fields=fields
-        self.strict=strict
+        self.fields: dict[str, Validator] = fields
+        self.strict: bool = strict
         
-    def validate(self,data):
+    def validate(self,data: dict[str, Any]) -> dict[str, Any]:
         """ Validate a dictionary of data against the schema. 
         
         Parameters
@@ -87,8 +95,8 @@ class Schema:
                 f"Expected a dictionary, got {type(data).__name__!r}"
             )
         
-        errors = {}
-        result = {}
+        errors: dict[str, Any] = {}
+        result: dict[str, Any] = {}
         
         if self.strict:
             for key in data:
@@ -117,7 +125,7 @@ class Schema:
         
         
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         field_reprs = ", ".join(
             f"{k!r}: {v!r}" for k, v in self.fields.items()
         )
