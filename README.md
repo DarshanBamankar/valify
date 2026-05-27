@@ -116,6 +116,12 @@ from valify.exceptions import (
 )
 ```
 
+## Version History
+
+- **0.3.0** — Added `OptionalValidator`, `ListValidator`, `EnumValidator`
+- **0.2.0** — Full type hints and mypy compatibility
+- **0.1.0** — Initial release
+
 ## License
 
 MIT
