@@ -348,5 +348,186 @@ class EmailValidator(Validator):
     
     def __repr__(self) -> str:
         return "EmailValidator()"
+
+
+class OptionalValidator(Validator):
+    """Wraps any validator and makes its field optional.
+
+    If the value is None or the field is missing, returns the default
+    value instead of raising ValidationError.
+
+    Parameters
+    ----------
+    validator : Validator
+        The validator to apply if a value is present.
+    default : Any
+        Value to return when the field is absent or None.
+        Defaults to None.
+
+    Example
+    -------
+        v = OptionalValidator(StringValidator(min_length=2), default="")
+        v.validate("Alice")  # returns "Alice"
+        v.validate(None)     # returns ""
+    """
     
+    def __init__(
+        self,
+        validator: Validator,
+        *,
+        default: Any = None
+        ) -> None:
+        self.validator: Validator = validator
+        self.default: Any = default
+        
+    def validate(self, value: Any) -> Any:
+        if value is None:
+            return self.default
+        return self.validator.validate(value)
+    
+    def __repr__(self) -> str:
+        return (
+            f"OptionalValidator("
+            f"validator={self.validator!r}, "
+            f"default={self.default!r})"
+        )
+
+class ListValidator(Validator):
+    """
+    Validates that a value is a list, with each item passing a validator.
+
+    Parameters
+    ----------
+    item_validator : Validator
+        The validator applied to every item in the list.
+    min_items : int or None
+        Minimum number of items. None means no minimum.
+    max_items : int or None
+        Maximum number of items. None means no maximum.
+
+    Example
+    -------
+        v = ListValidator(StringValidator(), min_items=1, max_items=5)
+        v.validate(["alice", "bob"])   # returns ["alice", "bob"]
+        v.validate([])                 # raises ValidationError
+    """
+    
+    def __init__(
+        self,
+        item_validator: Validator,
+        *,
+        min_items: int | None = None,
+        max_items: int | None = None,
+        ) -> None:
+        
+        self.item_validator: Validator = item_validator
+        self.min_items: int | None = min_items
+        self.max_items: int | None = max_items
+    
+    def validate(self, value: Any) -> list[Any]:
+        if not isinstance(value, list):
+            raise ValidationError(
+                f"Expected a list, got {type(value).__name__}.",
+                value = value,
+            )
+        
+        if self.min_items is not None and len(value) < self.min_items:
+            raise ValidationError(
+                f"Must have atleast {self.min_items} items.",
+                value = value,
+            )
+        
+        if self.max_items is not None and len(value) > self.max_items:
+            raise ValidationError(
+                f"Must have at most {self.max_items} items.",
+                value = value,
+            )
+        
+        validated_items = []
+        item_errors: dict[int, str] = {}
+        
+        for index, item in enumerate(value):
+            try:
+                validated_items.append(self.item_validator.validate(item))
+            except ValidationError as e:
+                item_errors[index] = e.message
+        
+        if item_errors:
+            error_lines = "\n".join(
+                f" [{index}]: {msg}" for index, msg in item_errors.items()
+            )
+            raise ValidationError(
+                f"List Validation Failed:\n{error_lines}",
+                value = value,
+            )
+        
+        return validated_items
+    
+    def __repr__(self) -> str:
+        return (
+            f"ListValidator("
+            f"item_validator={self.item_validator!r}, "
+            f"min_items={self.min_items!r}, "
+            f"max_items={self.max_items!r})"
+        )
+
+class EnumValidator(Validator):
+    """
+    Validates that a value is one of a fixed set of allowed choices.
+
+    Parameters
+    ----------
+    choices : list or set
+        The collection of allowed values.
+    case_sensitive : bool
+        If False, string comparisons are case-insensitive.
+        Defaults to True.
+
+    Example
+    -------
+        v = EnumValidator(choices=["admin", "user", "guest"])
+        v.validate("admin")   # returns "admin"
+        v.validate("root")    # raises ValidationError
+    """
+    
+    def __init__(
+        self,
+        choices: list[Any] | set[Any],
+        *,
+        case_sensitive: bool = True,
+    ) -> None:
+        
+        self.choices : list[Any] | set[Any] = choices
+        self.case_sensitive: bool = case_sensitive
+        
+        if not case_sensitive:
+            self._lookup : set[Any] = {
+                c.lower() if isinstance(c, str) else c
+                for c in choices
+            }
+        else:
+            self._lookup = set(choices)
+            
+    def validate(self, value: Any) -> Any:
+        comparable = (
+            value.lower()
+            if not self.case_sensitive and isinstance(value, str)
+            else value
+        )
+        
+        if comparable not in self._lookup:
+            raise ValidationError(
+                f"{value!r} is not a valid choice."
+                f"Must be one of: {self.choices},",
+                value = value,
+            )
+        
+        return value
+    
+    def __repr__(self) -> str:
+        return (
+            f"EnumValidator("
+            f"choices={self.choices!r}, "
+            f"case_sensitive={self.case_sensitive!r})"
+        )
     

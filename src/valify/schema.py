@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 from .exceptions import ValidationError, RequiredFieldError, SchemaError
-from .validators import Validator
+from .validators import OptionalValidator, Validator
 
 class Schema:
     """ Validates a dictionary against a set of validators. 
@@ -105,7 +105,10 @@ class Schema:
         
         for field_name,validator in self.fields.items():
             if field_name not in data:
-                errors[field_name] = "Required field missing."
+                if isinstance(validator, OptionalValidator):
+                    result[field_name] = validator.default
+                else:
+                    errors[field_name] = "Required field missing."
                 continue
             
             try:
@@ -130,5 +133,4 @@ class Schema:
             f"{k!r}: {v!r}" for k, v in self.fields.items()
         )
         return f"Schema({{{field_reprs}}}, strict={self.strict!r})"
-    
     

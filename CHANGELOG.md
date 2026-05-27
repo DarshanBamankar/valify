@@ -5,6 +5,14 @@ All notable changes to valify will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-27
+
+### Added
+- `OptionalValidator` — makes any field optional with a default value
+- `ListValidator` — validates every item in a list
+- `EnumValidator` — value must be one of a fixed set of choices
+- 12 new tests (50 total)
+
 ## [0.2.0] - 2026-05-27
 
 ### Added

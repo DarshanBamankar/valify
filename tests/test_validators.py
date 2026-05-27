@@ -10,7 +10,8 @@ from valify import (
     BoolValidator,
     EmailValidator,
     ValidationError,
-) 
+)
+from valify.validators import EnumValidator, ListValidator, OptionalValidator 
 
 class TestStringValidator:
     """ Tests for StringValidator. """
@@ -162,3 +163,68 @@ class TestBoolValidator:
         v = BoolValidator(coerce=True)
         with pytest.raises(ValidationError):
             v.validate("maybe")
+
+class TestOptionalValidator:
+    """ Tests for Optional Validator. """
+    
+    def test_valid_value_passes(self):
+        v = OptionalValidator(StringValidator(), default = "")
+        assert v.validate("Hello") == "Hello"
+    
+    def test_none_returns_default(self):
+        v = OptionalValidator(StringValidator(), default = "")
+        assert v.validate(None) == ""
+    
+    def test_none_returns_none_default(self):
+        v = OptionalValidator(StringValidator())
+        assert v.validate(None) is None
+
+class TestListValidator:
+    """ Tests for List Validator. """
+    
+    def test_valid_value_passes(self):
+        v = ListValidator(StringValidator())
+        assert v.validate(["D","M"]) == ["D", "M"]
+        
+    def test_non_list_raises_error(self):
+        v = ListValidator(StringValidator())
+        with pytest.raises(ValidationError):
+            v.validate("not a list")
+    
+    def test_below_min_items_raises_error(self):
+        v = ListValidator(StringValidator(), min_items=2)
+        with pytest.raises(ValidationError):
+            v.validate(["Hello"])
+    
+    def test_above_max_items_raises_error(self):
+        v = ListValidator(StringValidator(), max_items=2)
+        with pytest.raises(ValidationError):
+            v.validate(["1","2","3"])
+    
+    def test_invalid_item_inside_list(self):
+        v = ListValidator(StringValidator())
+        with pytest.raises(ValidationError):
+            v.validate(["1",2,"3",4])
+
+class TestEnumValidator:
+    """Tests for Enum Validator. """
+    
+    def test_valid_choice_pass(self):
+        v = EnumValidator(["admin", "user"])
+        assert v.validate("admin") == "admin"
+    
+    def test_invalid_choice_raises_error(self):
+        v = EnumValidator(["admin", "user"])
+        with pytest.raises(ValidationError):
+            v.validate("superadmin")
+    
+    def test_case_sensitive_mode_works_if_true(self):
+        v = EnumValidator(["admin", "user"], case_sensitive=True)
+        with pytest.raises(ValidationError):
+            v.validate("Admin")
+    
+    def test_case_sensitive_mode_works_if_false(self):
+        v = EnumValidator(["admin", "user"], case_sensitive=False)
+        assert v.validate("Admin") == "Admin"
+        
+    

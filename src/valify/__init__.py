@@ -30,7 +30,10 @@ from .validators import (
     IntValidator,
     FloatValidator,
     BoolValidator,
-    EmailValidator
+    EmailValidator,
+    OptionalValidator,
+    ListValidator,
+    EnumValidator,
 ) 
 
 from .schema import Schema
@@ -54,11 +57,14 @@ __all__ = [
     "FloatValidator",
     "BoolValidator",
     "EmailValidator",
+    "OptionalValidator",
+    "ListValidator",
+    "EnumValidator",
     
     # Schema
     "Schema",    
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__ = "Darshan Bamankar"
 
