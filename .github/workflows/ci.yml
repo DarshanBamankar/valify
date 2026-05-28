@@ -1,0 +1,50 @@
+# .github/workflows/ci.yml
+#
+# CI = Continuous Integration
+# This workflow runs automatically on every push and pull request.
+# It ensures the code is always tested and typed correctly.
+
+name: CI
+
+# When to run this workflow
+on:
+  push:
+    branches: ["main"]     # runs on every push to main
+  pull_request:
+    branches: ["main"]     # runs on every PR targeting main
+
+jobs:
+  test:
+    name: Test and Type check 
+    runs-on: ubuntu-latest     # runs on a fresh ubuntu machine
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]     # test on 3 different python versions
+    
+    steps:
+
+      # Checkout the code onto the machine
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install the python version 
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # Install packages and dev dependencies
+      - name: Installing package and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install mypy
+      
+      # Run the 50 tests
+      - name: Run tests
+        run: pytest
+      
+      # Run type checking
+      - name: Run mypy
+        run: mypy src/valify
