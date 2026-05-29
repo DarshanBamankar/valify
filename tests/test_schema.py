@@ -13,21 +13,6 @@ from valify import (
 )
 from valify.validators import BoolValidator
 
-"""
-Tests for valify.schema
-"""
-
-import pytest
-from valify import (
-    Schema,
-    StringValidator,
-    IntValidator,
-    EmailValidator,
-    ValidationError,
-    SchemaError,
-)
-
-
 class TestSchemaValidation:
     """Tests for Schema.validate()"""
 
