@@ -11,6 +11,7 @@ from valify import (
     ValidationError,
     SchemaError,
 )
+from valify.validators import BoolValidator
 
 """
 Tests for valify.schema
@@ -107,3 +108,75 @@ class TestSchemaDefinition:
         )
         with pytest.raises(ValidationError):
             schema.validate({"name": "Alice", "extra": "field"})
+
+class TestNestedSchemas:
+    """ Tests for Nested Schemas Validation. """
+    
+    def setup_method(self):
+        address_schema = Schema({
+            "street": StringValidator(min_length=2),
+            "city": StringValidator(min_length=2),
+            "pin": StringValidator(min_length=6, max_length=6),
+        })
+        
+        self.schema = Schema({
+            "name": StringValidator(min_length=2),
+            "age": IntValidator(min_value=0),
+            "address": address_schema,
+        })
+        
+        self.nested_schema = Schema({
+            "user": self.schema,
+            "allowed": BoolValidator(),
+        })
+        
+    def test_valid_nested_data(self):
+        result = self.schema.validate({
+            "name": "Darshan",
+            "age": 21,
+            "address": {
+                "street": "MG road",
+                "city": "Pune",
+                "pin": "412458",
+            }
+        })
+        assert result["address"]["city"] == "Pune"
+    
+    def test_invalid_nested_field_reports_error(self):
+        with pytest.raises(ValidationError):
+            result = self.schema.validate({
+                "name": "Darshan",
+                "age": 21,
+                "address": {
+                    "street": "M",
+                    "city": "Pune",
+                    "pin": "412458",
+                }
+            })
+    
+    def test_missing_nested_field_reports_error(self):
+        with pytest.raises(ValidationError):
+            result = self.schema.validate({
+                "name": "Darshan",
+                "age": 21,
+                "address": {
+                    "city": "Pune",
+                    "pin": "412458",
+                }
+            })
+            
+    def test_deeply_nested_schemas(self):
+        result = self.nested_schema.validate({
+            "user": {
+                "name": "Darshan",
+                "age": 21,
+                "address": {
+                    "street": "MG road",
+                    "city": "Pune",
+                    "pin": "412568",
+                }
+            },
+            "allowed": True
+            
+        })
+        assert result["user"]["address"]["city"] == "Pune"

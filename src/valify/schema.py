@@ -17,7 +17,7 @@ from typing import Any
 from .exceptions import ValidationError, RequiredFieldError, SchemaError
 from .validators import OptionalValidator, Validator
 
-class Schema:
+class Schema(Validator):
     """ Validates a dictionary against a set of validators. 
     
     Parameters
