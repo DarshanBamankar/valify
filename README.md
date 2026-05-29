@@ -53,6 +53,9 @@ schema.validate({
 | `FloatValidator` | Floats, with optional min/max value |
 | `BoolValidator` | Booleans, with optional string coercion |
 | `EmailValidator` | Email address format |
+| `OptionalValidator` | Wraps any validator and makes it optional |
+| `ListValidator` | Validates every item in a list |
+| `EnumValidator` | Value must be one of a fixed set of choices |
 
 ## Validators in Detail
 
@@ -104,6 +107,36 @@ try:
 except ValidationError as e:
     print(e.message)  # Must be at least 0.
     print(e.value)    # -1
+```
+
+## Nested Schemas
+
+Schemas can be nested inside other schemas for validating complex data:
+
+```python
+from valify import Schema, StringValidator, IntValidator
+
+address_schema = Schema({
+    "street": StringValidator(min_length=2),
+    "city":   StringValidator(min_length=2),
+    "pin":    StringValidator(min_length=6, max_length=6),
+})
+
+user_schema = Schema({
+    "name":    StringValidator(min_length=2),
+    "age":     IntValidator(min_value=0),
+    "address": address_schema,
+})
+
+user_schema.validate({
+    "name": "Darshan",
+    "age":  20,
+    "address": {
+        "street": "MG Road",
+        "city":   "Pune",
+        "pin":    "411001",
+    }
+})
 ```
 
 ## Error Handling
