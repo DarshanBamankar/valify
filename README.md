@@ -1,5 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/valify.svg)](https://pypi.org/project/valify/)
 [![Python](https://img.shields.io/pypi/pyversions/valify.svg)](https://pypi.org/project/valify/)
+[![CI](https://github.com/DarshanBamankar/valify/actions/workflows/ci.yml/badge.svg)](https://github.com/DarshanBamankar/valify/actions)
 
 # valify
 
