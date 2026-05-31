@@ -134,3 +134,89 @@ class Schema(Validator):
         )
         return f"Schema({{{field_reprs}}}, strict={self.strict!r})"
     
+    @classmethod
+    def from_example(cls, example: dict[str, Any]) -> "Schema":
+        """
+        Generate a Schema automatically from a sample data dictionary.
+
+        Inspects the type of each value and maps it to the appropriate
+        validator. Supports nested dictionaries recursively.
+
+        Parameters
+        ----------
+            example : dict
+                A sample dictionary representing the expected data shape.
+
+        Returns
+        -------
+        Schema
+            A Schema instance with inferred validators.
+
+        Example
+        -------
+            schema = Schema.from_example({
+                "name":   "Alice",
+                "age":    30,
+                "email":  "alice@example.com",
+                "score":  9.5,
+                "active": True,
+            })
+            schema.validate({
+                "name":   "Bob",
+                "age":    25,
+                "email":  "bob@example.com",
+                "score":  8.0,
+                "active": False,
+            })
+        """
+        from .validators import (
+            StringValidator,
+            IntValidator,
+            FloatValidator,
+            BoolValidator,
+            EmailValidator,
+            ListValidator,
+        )
+        import re
+        
+        _EMAIL_RE = re.compile(
+            r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        )
+        
+        fields: dict[str, Validator] = {}
+        
+        for key, value in example.items():
+            if isinstance(value, bool):
+                # bool must be checked first as bool is a subclass of int
+                fields[key] = BoolValidator()
+                
+            elif isinstance(value, int):
+                fields[key] = IntValidator()
+                
+            elif isinstance(value, float):
+                fields[key] = FloatValidator()
+                
+            elif isinstance(value, str):
+                if _EMAIL_RE.match(value.strip().lower()):
+                    fields[key] = EmailValidator()
+                else:
+                    fields[key] = StringValidator()
+            
+            elif isinstance(value, dict):
+                fields[key] = cls.from_example(value)
+                
+            elif isinstance(value, list) and value:
+                # use the first item to infer the item validator
+                item_example = {key:value[0]}
+                item_schema = cls.from_example(item_example)
+                item_validator = item_schema.fields[key]
+                fields[key] = ListValidator(item_validator)
+                
+            else:
+                # Fallback to StringValidator for unknown types
+                fields[key] = StringValidator()
+                
+        return cls(fields)
+                
+       
+    

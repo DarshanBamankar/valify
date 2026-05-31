@@ -65,6 +65,6 @@ __all__ = [
     "Schema",    
 ]
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 __author__ = "Darshan Bamankar"
 

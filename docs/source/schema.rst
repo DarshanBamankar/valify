@@ -58,3 +58,44 @@ API reference
 .. autoclass:: valify.schema.Schema
    :members:
    :show-inheritance:
+
+
+Auto-generating Schemas
+-----------------------
+
+Use ``Schema.from_example()`` to automatically generate a Schema
+from a sample data dictionary:
+
+.. code-block:: python
+
+   schema = Schema.from_example({
+       "name":    "Alice",
+       "age":     30,
+       "email":   "alice@example.com",
+       "score":   9.5,
+       "active":  True,
+       "address": {
+           "city": "Pune",
+           "pin":  "411001",
+       },
+       "tags": ["python", "developer"],
+   })
+
+   # Automatically inferred:
+   # name    → StringValidator
+   # age     → IntValidator
+   # email   → EmailValidator
+   # score   → FloatValidator
+   # active  → BoolValidator
+   # address → nested Schema
+   # tags    → ListValidator(StringValidator)
+
+   result = schema.validate({
+       "name":    "Bob",
+       "age":     25,
+       "email":   "bob@example.com",
+       "score":   8.0,
+       "active":  False,
+       "address": {"city": "Mumbai", "pin": "400001"},
+       "tags":    ["django", "fastapi"],
+   })

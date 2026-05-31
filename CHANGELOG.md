@@ -5,6 +5,16 @@ All notable changes to valify will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-05-31
+
+### Added
+- `Schema.from_example()` — automatically generates a Schema from
+  sample data by inferring validator types
+- Supports all built-in types: str, int, float, bool, email, dict, list
+- Nested dict values produce nested schemas recursively
+- List values infer item validator from first element
+- 8 new tests (62 total)
+
 ## [0.5.0] - 2026-05-30
 
 ### Added

@@ -10,8 +10,9 @@ from valify import (
     EmailValidator,
     ValidationError,
     SchemaError,
+    FloatValidator
 )
-from valify.validators import BoolValidator
+from valify.validators import BoolValidator, ListValidator
 
 class TestSchemaValidation:
     """Tests for Schema.validate()"""
@@ -165,3 +166,69 @@ class TestNestedSchemas:
             
         })
         assert result["user"]["address"]["city"] == "Pune"
+        
+class TestSchemaFromExample:
+    
+    def test_infers_string_validator(self):
+        s = Schema.from_example({
+            'name': 'Darshan',
+        })
+        assert isinstance(s.fields["name"], StringValidator)
+    
+    def test_infers_int_validator(self):
+        s = Schema.from_example({
+            'age': 21,
+        })
+        assert isinstance(s.fields["age"], IntValidator)
+        
+    def test_infers_float_validator(self):
+        s = Schema.from_example({
+            'grade': 9.5,
+        })
+        assert isinstance(s.fields["grade"], FloatValidator)
+    
+    def test_infers_bool_validator(self):
+        s = Schema.from_example({
+            'active': False,
+        })
+        assert isinstance(s.fields["active"], BoolValidator)
+    
+    def test_infers_email_validator(self):
+        s = Schema.from_example({
+            'email': "darshan@example.com",
+        })
+        assert isinstance(s.fields["email"], EmailValidator)
+        
+    def test_infers_nested_schema(self):
+        s = Schema.from_example({
+            'email': "darshan@example.com",
+            'address': {
+                'street': "MG road",
+                'pincode': "412587",
+            }
+        })
+        assert isinstance(s.fields["address"], Schema)
+    
+    def test_infers_list_validator(self):
+        s = Schema.from_example({
+            'roles': ['admin', 'user']
+        })
+        assert isinstance(s.fields["roles"], ListValidator)
+        assert isinstance(s.fields["roles"].item_validator, StringValidator)
+        
+    def test_validates_inferred_schema(self):
+        s = Schema.from_example({
+            'name': "Darshan",
+            'age': 21,
+        })
+        
+        result = s.validate({
+            'name': "Madhu",
+            'age': 21,
+        })
+        
+        assert result["name"] == "Madhu"
+        assert result["age"] == 21
+        
+        
+        
